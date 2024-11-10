@@ -1,0 +1,6 @@
+{
+    "http://localhost:8000/": "C:\\Users\\jakub\\Documents\\TECS 2024\\SampleWebsite\\src\\Main.php",
+    "http://localhost:8000/account": "C:\\Users\\jakub\\Documents\\TECS 2024\\SampleWebsite\\src\\Account.php",
+    "http://localhost:8000/login": "C:\\Users\\jakub\\Documents\\TECS 2024\\SampleWebsite\\src\\Login.php",
+    "http://localhost:8000/echo": "C:\\Users\\jakub\\Documents\\TECS 2024\\SampleWebsite\\src\\EchoTest.php"
+}

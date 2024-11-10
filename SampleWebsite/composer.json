@@ -1,0 +1,19 @@
+{
+    "name": "jakub/testsite",
+    "description": "Website for testing vulnerabilities",
+    "autoload": {
+        "psr-4": {
+            "SampleWebsite\\": "src/"
+        }
+    },
+    "minimum-stability": "dev",
+    "require": {
+        "php-di/php-di": "dev-master",
+        "relay/relay": "3.x-dev",
+        "laminas/laminas-diactoros": "3.6.x-dev",
+        "middlewares/fast-route": "dev-master",
+        "middlewares/request-handler": "dev-master",
+        "narrowspark/http-emitter": "^2.0@dev",
+        "ext-mysqli": "*"
+    }
+}
