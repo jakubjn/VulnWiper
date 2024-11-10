@@ -27,7 +27,7 @@ class Model:
 AI = Model()
 
 def FixVulnerability(vulnerableDomain):
-    with open(vulnerableDomain.script, 'rb') as script:
+    with open(vulnerableDomain.script, 'rt') as script:
         print(script.read())
 
         script.close()
