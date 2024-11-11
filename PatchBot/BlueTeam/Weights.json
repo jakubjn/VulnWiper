@@ -1,0 +1,14 @@
+{
+    "Form XSS": {
+        "sample": 0,
+        "<?php": 0
+    },
+
+    "URL XSS": {
+        "sample": 0
+    },
+
+    "Form SQLi": {
+        "sample": 0
+    }
+}

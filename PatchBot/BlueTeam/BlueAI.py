@@ -1,35 +1,38 @@
 import sys, os
+import json
 sys.path.append(os.path.abspath(os.path.join('PatchBot')))
 
 from UtilityClasses import *
+from AIUtility import *
+
+import Utility
 
 class Model:
     def __init__(self):
         pass
 
-    def _train(xVal, yVal):
-        # Give the AI an X Value, then check it with the Y Value
+    def _predict(self, xVal, weights):
+        matrix = [line.split() for line in xVal]
 
-        # Adapt the weights to match the Y Value
+        wordsToAdd = {}
 
-        pass
+        for wordArray in matrix:
+            for word in wordArray:
+                if(Utility.CheckForKeyValueDictionary(weights, word)):
+                    print('Exists ' + word)
+                else:
+                    wordsToAdd[word] = 0
+                    print('Added ' + word)
+        
+        AddWeightsWithDict(wordsToAdd)
 
-    def _predict(xVal):
-        # Use a function to predict the y value with the weights
-
-        pass
-
-    def predict(xValues):
-        # Predict multiple x Values 
-
-        pass
-
-AI = Model()
+AI = Model()     
 
 def FixVulnerability(vulnerableDomain):
-    with open(vulnerableDomain.script, 'rt') as script:
-        print(script.read())
+    with open(vulnerableDomain.script, 'r') as script:
+        AI._predict(script, LoadWeights(vulnerableDomain.vulnerability))
 
-        script.close()
+FixVulnerability(VulnerableDomain("http://localhost:8000/echo", "Form XSS", "<script>alert(1);</script>", "C:\\Users\\jakub\\Documents\\TECS 2024\\SampleWebsite\\src\\EchoTest.php"))
+        
 
 

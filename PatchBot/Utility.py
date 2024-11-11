@@ -50,6 +50,15 @@ def CheckForValue(array, value):
         return False
     else:
         return True
+    
+def CheckForKeyValueDictionary(dict, value):
+    try:
+        if(dict[value] != None):
+            return True;
+    except:
+        return False
+    
+    return False;
 
 # Checks if a domain is present inside a VulnerableDomain array    
 def CheckForDomainValue(array, value):
