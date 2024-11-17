@@ -159,15 +159,16 @@ def HtmlToData(filePath):
 
 # Loads data from a folder
 def GetTrainingData(path):
-    directory = os.fsencode(path)
-
-    arrayX = []
+    array = []
     
     os.chdir(path)
 
     for file in os.listdir():
-        file_path = f"{path}\{file}"
+        Xfile_path = f"{path}\{file}\X.php"
+        Yfile_path = f"{path}\{file}\Y.php"
 
-        arrayX.append(HtmlToData(file_path))
+        array.append([Xfile_path, Yfile_path])
 
-    return arrayX
+    return array
+
+#["file1", "file2"],["fileX", "fileY"]
