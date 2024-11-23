@@ -2,6 +2,7 @@ import sys, os
 sys.path.append(os.path.abspath(os.path.join('PatchBot')))
 
 import json
+import numpy
 
 import Utility
 
@@ -16,6 +17,16 @@ def LoadContent():
     with open(r'C:\Users\jakub\Documents\TECS 2024\PatchBot\BlueTeam\Weights.json','rt') as weights:
         content = json.load(weights)
         return content 
+    
+def ClearWeights():
+    with open(r'C:\Users\jakub\Documents\TECS 2024\PatchBot\BlueTeam\Weights.json','w') as weights:
+        content = {}
+
+        content["Form XSS"] = {"0" : 0}
+        content["Form SQLi"] = {"0" : 0}
+        content["URL XSS"] = {"0" : 0}
+
+        json.dump(content, weights, indent = 2)
 
 # Removes unneccessary entries and characters from tokens 
 def SanitiseLines(matrix):
@@ -91,10 +102,7 @@ def UpdateToken(token, position, type, discriminant=1, sensitivity=3):
     with open(r'C:\Users\jakub\Documents\TECS 2024\PatchBot\BlueTeam\Weights.json','w') as weights:
         currentDict = content[type]
 
-        if(Utility.CheckForKeyValueDictionary(currentDict, token) == False): 
-            currentDict[token] = 0
-
-        currentDict[token] = currentDict[token] + (discriminant*(1/position))/sensitivity
+        currentDict[str(token)] = currentDict[str(token)] + discriminant * (1 / (position * sensitivity))
 
         content[type] = currentDict
 
@@ -104,8 +112,40 @@ def UpdateToken(token, position, type, discriminant=1, sensitivity=3):
 
         return content[type]
 
+# Updates multiple tokens
 def UpdateTokens(tokens, type, discriminant=1, sensitivity=3):
-    t = len(tokens) - 1
+    for i, token in enumerate(tokens):
+        UpdateToken(token, len(tokens)-i, type, discriminant, sensitivity)
 
-    for x in range(t):
-        UpdateToken(tokens[t-x], x+1, type, discriminant, sensitivity)
+# Splits a token array into a given block size
+def GetBlocks(array, blocksize):
+    matrix = [] 
+
+    length = len(array)
+
+    while blocksize < length:
+        newArray = array[:blocksize]
+        matrix.append(newArray)
+
+        for i in range(blocksize): 
+            array.pop(0)
+        
+        length = len(array)
+    
+    if(length > 1):
+        newArray = array[:length]
+        matrix.append(newArray)
+
+    return matrix
+
+def GetNeighbours(i, array):
+    length = len(array) - 1
+
+    if(i-1 > 0 and i+1 < length):
+        return [array[i-1], array[i+1]]
+    elif(i-1 < 0):
+        return array[i+1]
+    elif(i+1 > length):
+        return array[i-1]
+    
+    ValueError()

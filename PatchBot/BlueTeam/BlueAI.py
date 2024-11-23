@@ -9,42 +9,44 @@ from AIUtility import *
 
 import Utility
 
-import tiktoken;
+from Tokenizer import GetTokenizer
 
 # Tokeniser for the Code
-enc = tiktoken.get_encoding("p50k_base")
-enc = tiktoken.encoding_for_model("text-davinci-003")
+enc = GetTokenizer()
 
 # AI which predicts where the fix goes
 class Model:
     # XValue: Script before change | YValue: Script after change
 
-    def __init__(self):
+    def __init__(self, blocksize=8, error_sensitivity=10, success_sensitivity=3):
+        self.error_sensitivity = error_sensitivity
+        self.success_sensitivity = success_sensitivity
+        self.blocksize = blocksize
         pass
     
     # Compare the script before and after, then adapt the weights
     def _train(self, xVal, yVal, vulnerability):
         weights = LoadWeights(vulnerability)
 
-        for t in range(len(xVal)):
-            if(t+1 > len(xVal)): break
+        #Loop through a fixed number of tokens each time
+        for i, token in enumerate(xVal):
 
-            if(Utility.CheckForKeyValueDictionary(weights, str(xVal[t])) == False):
-                weights = AddToken(xVal[t], vulnerability)
+            if(Utility.CheckForKeyValueDictionary(weights, str(token)) == False):
+                weights = AddToken(token, vulnerability)
 
-            if(xVal[t] != yVal[t]):
-                print("When the Context is: ", xVal[:t+1])
+            neighbours = GetNeighbours(i, xVal)
+            array = [token, *neighbours]
+
+            if(token != yVal[i]):
+                print("When the Context is: ", array)
                 print("The Target is: ", 1)
-                print("Current Token: ", xVal[t])
 
-                UpdateTokens(xVal[:t+1], vulnerability, 1)
-                break
+                UpdateTokens(array, vulnerability, 1, self.success_sensitivity)
             else:
-                print("When the Context is: ", xVal[:t+1])
+                print("When the Context is: ", block[:i+1])
                 print("The Target is: ", 0)
 
-                UpdateTokens(xVal[:t+1], vulnerability, -1)
-
+                UpdateTokens(array, vulnerability, -1, self.error_sensitivity)
     
     # Make a prediction on where to put the fix based on weights
     def _predict(self, xVal, vulnerability):
@@ -63,24 +65,28 @@ class Model:
         return score
     
     def predict(self, XVal, vulnerability):
-        for t in range(len(XVal)):
-            if(t+1 > len(XVal)): break
+        blocks = GetBlocks(XVal, self.blocksize)
 
-            if(Utility.CheckForKeyValueDictionary(LoadWeights(vulnerability), str(XVal[t])) == False):
-                AddToken(XVal[t], vulnerability)
+        for blockNum, block in enumerate(blocks):
 
-            score = self._predict(XVal[:t+1],vulnerability)
+            for i, token in enumerate(block):
+                if(Utility.CheckForKeyValueDictionary(LoadWeights(vulnerability), str(token)) == False):
+                    AddToken(token, vulnerability)
 
-            if(score == 1): break
+                score = self._predict(block[:i+1],vulnerability)
 
-            print("For Context: ", enc.decode(XVal[:t+1]))
-            print("Prediction: ", score)
+                if(score == 1): break
+
+                print("For Context: ", enc.decode(block[:i+1]))
+                print("Prediction: ", score)
   
 
-AI = Model()    
+AI = Model(blocksize=3, error_sensitivity=200, success_sensitivity=3)    
 
 # Trains the AI on the practice dataset
 def TrainAI():
+    ClearWeights()
+
     array = Utility.GetTrainingData(r'C:\Users\jakub\Documents\TECS 2024\PatchBot\BlueTeam\TrainingData')
 
     for fileMatrix in array:
@@ -95,13 +101,20 @@ def TrainAI():
         yVal.close()
 
 def TestAI():
-    xVal = open(r'C:\Users\jakub\Documents\TECS 2024\SampleWebsite\src\EchoTest.php', 'r')
+    array = Utility.GetTrainingData(r'C:\Users\jakub\Documents\TECS 2024\PatchBot\BlueTeam\TestData')
 
-    AI.predict(enc.encode(xVal.read()), "Form XSS")
+    for fileMatrix in array:
+        print("========================================")
 
-    xVal.close()
+        xVal = open(fileMatrix[0], 'r')
 
-#TrainAI()
+        AI.predict(enc.encode(xVal.read()), "Form XSS")
+
+        xVal.close()
+
+#TestAI()
+
+TrainAI()
 
 
 
