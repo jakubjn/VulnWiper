@@ -1,0 +1,5 @@
+{
+    "Form XSS": "htmlspecialcharacters",
+    "Form SQLi": "",
+    "URL XSS": ""
+}

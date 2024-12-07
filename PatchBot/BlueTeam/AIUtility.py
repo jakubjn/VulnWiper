@@ -6,6 +6,14 @@ import numpy
 
 import Utility
 
+class ContextValuePair:
+    def __init__(self, key, value):
+        self.Key = key
+        self.Value = value
+
+    def ToDict(self):
+        return {"Key":self.Key, "Value":self.Value}
+
 # Loads a specific type of weights
 def LoadWeights(type):
     with open(r'C:\Users\jakub\Documents\TECS 2024\PatchBot\BlueTeam\Weights.json','rt') as weights:
@@ -17,6 +25,11 @@ def LoadContent():
     with open(r'C:\Users\jakub\Documents\TECS 2024\PatchBot\BlueTeam\Weights.json','rt') as weights:
         content = json.load(weights)
         return content 
+    
+def LoadPatch(type):
+     with open(r'C:\Users\jakub\Documents\TECS 2024\PatchBot\BlueTeam\Patches.json','rt') as patches:
+        content = json.load(patches)
+        return content[type]
     
 def ClearWeights():
     with open(r'C:\Users\jakub\Documents\TECS 2024\PatchBot\BlueTeam\Weights.json','w') as weights:
@@ -115,7 +128,9 @@ def UpdateToken(token, position, type, discriminant=1, sensitivity=3):
 # Updates multiple tokens
 def UpdateTokens(tokens, type, discriminant=1, sensitivity=3):
     for i, token in enumerate(tokens):
-        UpdateToken(token, len(tokens)-i, type, discriminant, sensitivity)
+        if(token < 0): continue
+
+        UpdateToken(token, i+1, type, discriminant, sensitivity)
 
 # Splits a token array into a given block size
 def GetBlocks(array, blocksize):
@@ -141,11 +156,33 @@ def GetBlocks(array, blocksize):
 def GetNeighbours(i, array):
     length = len(array) - 1
 
-    if(i-1 > 0 and i+1 < length):
+    if(i-1 >= 0 and i+1 <= length):
         return [array[i-1], array[i+1]]
     elif(i-1 < 0):
-        return array[i+1]
+        return [array[i+1]]
     elif(i+1 > length):
-        return array[i-1]
+        return [array[i-1]]
     
-    ValueError()
+    print("No Neighbours?", i)
+
+def HashBlockSizes(xVal, context_Size=2):
+    hash = dict()
+
+    # Split tokens into pairs | Hash Pairs
+    for i, token in enumerate(xVal):
+        if(i < context_Size or i == (len(xVal) - 1)): continue
+
+        pair = []
+
+        for context in range(context_Size):
+            pair.append(xVal[i-context])
+
+        pair = tuple(pair)
+
+        if pair in hash.keys():
+            hash[pair] += 1
+        else:
+            hash[pair] = 1
+
+    return hash
+

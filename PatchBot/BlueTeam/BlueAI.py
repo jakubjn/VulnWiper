@@ -1,4 +1,6 @@
 import sys, os
+import shutil
+
 import json
 
 import re
@@ -15,7 +17,7 @@ from Tokenizer import GetTokenizer
 enc = GetTokenizer()
 
 # AI which predicts where the fix goes
-class Model:
+class PredictionModel:
     # XValue: Script before change | YValue: Script after change
 
     def __init__(self, blocksize=8, error_sensitivity=10, success_sensitivity=3):
@@ -28,34 +30,40 @@ class Model:
     def _train(self, xVal, yVal, vulnerability):
         weights = LoadWeights(vulnerability)
 
-        #Loop through a fixed number of tokens each time
-        for i, token in enumerate(xVal):
+        xHash = HashBlockSizes(xVal, context_Size=self.blocksize)
+        yHash = HashBlockSizes(yVal, context_Size=self.blocksize)
 
-            if(Utility.CheckForKeyValueDictionary(weights, str(token)) == False):
-                weights = AddToken(token, vulnerability)
+        #Loop through a number of contexts each time
+        for context in xHash.keys():
 
-            neighbours = GetNeighbours(i, xVal)
-            array = [token, *neighbours]
+            for token in context:
+                if(Utility.CheckForKeyValueDictionary(weights, str(token)) == False):
+                    weights = AddToken(token, vulnerability)
 
-            if(token != yVal[i]):
-                print("When the Context is: ", array)
+            if(context not in yHash.keys()):
+                print("When the Context is: ", context)
                 print("The Target is: ", 1)
 
-                UpdateTokens(array, vulnerability, 1, self.success_sensitivity)
+                UpdateTokens(context, vulnerability, 1, self.success_sensitivity)
             else:
-                print("When the Context is: ", block[:i+1])
+                print("When the Context is: ", context)
                 print("The Target is: ", 0)
 
-                UpdateTokens(array, vulnerability, -1, self.error_sensitivity)
+                UpdateTokens(context, vulnerability, -1, self.error_sensitivity)
     
     # Make a prediction on where to put the fix based on weights
-    def _predict(self, xVal, vulnerability):
-        weights = LoadWeights(vulnerability)
-
+    def _predict(self, xVal, vulnerability, weights):
         score = 0
 
-        for token in xVal:
-            score = score + weights[str(token)]
+        for i, token in enumerate(xVal):
+            if(Utility.CheckForKeyValueDictionary(weights, str(token)) == False):
+                weights = AddToken(token, vulnerability)
+                continue
+
+            if(i == 0):
+                score = score + weights[str(token)]
+            else:
+                score = score + (weights[str(token)] / 3)
 
         if(score > 1): 
             score = 1
@@ -65,29 +73,50 @@ class Model:
         return score
     
     def predict(self, XVal, vulnerability):
-        blocks = GetBlocks(XVal, self.blocksize)
+        weights = LoadWeights(vulnerability)
 
-        for blockNum, block in enumerate(blocks):
+        best_score = 0
+        best_context = []
 
-            for i, token in enumerate(block):
-                if(Utility.CheckForKeyValueDictionary(LoadWeights(vulnerability), str(token)) == False):
-                    AddToken(token, vulnerability)
+        for i, token in enumerate(XVal):
 
-                score = self._predict(block[:i+1],vulnerability)
+            neighbours = GetNeighbours(i, XVal)
 
-                if(score == 1): break
+            array:list[int] = [token, *neighbours]
 
-                print("For Context: ", enc.decode(block[:i+1]))
-                print("Prediction: ", score)
-  
+            score = self._predict(array, vulnerability, weights)
 
-AI = Model(blocksize=3, error_sensitivity=200, success_sensitivity=3)    
+            if(score > best_score):
+                best_score = score
+                best_context = array
+
+        print("Best Context: ", enc.decode(best_context))
+        print("Score: ", best_score)
+
+        return best_context
+
+    def fix(self, script:str, context, vulnerability):
+        patch = LoadPatch(vulnerability)
+
+        contextString:str = context[1] + context[0] + context[2]
+
+        print(script)
+
+        print(str.find(script, contextString))
+
+        # Find Context in main string
+        # Insert Patch before it
+        # Close the Brackets
+
+AI = PredictionModel(blocksize=3, error_sensitivity=150, success_sensitivity=3)    
 
 # Trains the AI on the practice dataset
 def TrainAI():
     ClearWeights()
 
-    array = Utility.GetTrainingData(r'C:\Users\jakub\Documents\TECS 2024\PatchBot\BlueTeam\TrainingData')
+    array = Utility.GetTrainingData(r'C:\Users\jakub\Documents\TECS 2024\PatchBot\BlueTeam\TrainingData\XSS')
+
+    print("XSS Training")
 
     for fileMatrix in array:
         print("========================================")
@@ -112,9 +141,22 @@ def TestAI():
 
         xVal.close()
 
+# Clones the file, then predicts where to put the fix, then fixes it
+def FixVulnerability(vulnerableDomain:VulnerableDomain):
+    if(vulnerableDomain.vulnerability != "Form XSS"): return
+
+    shutil.copy(vulnerableDomain.script, r'PatchBot\BlueTeam\FixedScripts\Testing.php')
+
+    script = open(r'PatchBot\BlueTeam\FixedScripts\Testing.php', 'r').read()
+
+    context = AI.predict(enc.encode(script), vulnerableDomain.vulnerability)
+
+    AI.fix(script, enc.decode(context), vulnerableDomain.vulnerability)
+
 #TestAI()
 
-TrainAI()
+#TrainAI()
+
 
 
 

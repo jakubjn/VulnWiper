@@ -159,6 +159,8 @@ def HtmlToData(filePath):
 
 # Loads data from a folder
 def GetTrainingData(path):
+    #["file1", "file2"],["fileX", "fileY"]
+
     array = []
     
     os.chdir(path)
@@ -170,5 +172,3 @@ def GetTrainingData(path):
         array.append([Xfile_path, Yfile_path])
 
     return array
-
-#["file1", "file2"],["fileX", "fileY"]
