@@ -19,6 +19,7 @@ use SampleWebsite\Main;
 use SampleWebsite\EchoTest;
 use SampleWebsite\Login;
 use SampleWebsite\Account;
+use SampleWebsite\HiddenPage;
 
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 
@@ -28,33 +29,20 @@ $containerBuilder = new ContainerBuilder();
 $containerBuilder->useAutowiring(false);
 $containerBuilder->useAttributes(false);
 $containerBuilder->addDefinitions([
-    Main::class => create(Main::class)
-        ->constructor(get('Response')),
-            'Response' => function() {
-                return new Response();
-            },
+    Main::class => create(Main::class),
 
-    EchoTest::class => create(EchoTest::class)
-        ->constructor(get('Response')),
-            'Response' => function() {
-                return new Response();
-            },
+    EchoTest::class => create(EchoTest::class),
 
     Login::class => create(Login::class)
-        ->constructor(get('Response'), get('Dbconnection')),
-            'Response' => function() {
-                return new Response();
-            },
+        ->constructor(get('Dbconnection')),
             'Dbconnection' => function() {
                 global $connection;
                 return $connection;
             },
 
-    Account::class => create(Account::class)
-        ->constructor(get('Response')),
-            'Response' => function() {
-                return new Response();
-            },
+    Account::class => create(Account::class),
+
+    HiddenPage::class => create(HiddenPage::class)
 ]);
 
 $container = $containerBuilder->build();
@@ -64,6 +52,7 @@ $routes = simpleDispatcher(function (RouteCollector $r) {
     $r->get('/echo', EchoTest::class);
     $r->get('/login', Login::class);
     $r->get('/account', Account::class);
+    $r->get('/xpl', HiddenPage::class);
 
     $r->post('/echo', EchoTest::class);
     $r->post('/login', Login::class);

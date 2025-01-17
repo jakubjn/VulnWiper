@@ -14,8 +14,8 @@ class Login
     private $response;
     private $dbconnection;
 
-    public function __construct(ResponseInterface $response, Dbconnection $dbconnection) {
-        $this->response = $response;
+    public function __construct(Dbconnection $dbconnection) {
+        $this->response = new Response();
         $this->dbconnection = $dbconnection;
     }
 

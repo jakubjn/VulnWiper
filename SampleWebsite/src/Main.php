@@ -4,13 +4,14 @@ declare(strict_types=1);
 namespace SampleWebsite;
 
 use Psr\Http\Message\ResponseInterface;
+use Laminas\Diactoros\Response;
 
 class Main
 {
     private $response;
 
-    public function __construct(ResponseInterface $response) {
-        $this->response = $response;
+    public function __construct() {
+        $this->response = new Response();
     }
 
     public function __invoke(): ResponseInterface
