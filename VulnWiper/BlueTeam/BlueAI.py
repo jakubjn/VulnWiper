@@ -154,7 +154,7 @@ def FixVulnerability(vulnerableDomain:VulnerableDomain):
 
     context = AI.predict(enc.encode(script_read), vulnerableDomain.vulnerability)
 
-    AI.fix(script_read, enc.decode(context), vulnerableDomain.vulnerability)
+    # AI.fix(script_read, enc.decode(context), vulnerableDomain.vulnerability)
 
 
 
